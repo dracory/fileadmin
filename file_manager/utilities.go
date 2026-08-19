@@ -94,16 +94,17 @@ func (u *ui) allDirectories(rootPath string) ([]FileEntry, error) {
 // root-relative, e.g. "/1234" or "1234") to a full storage path
 // (e.g. "/uploads/1234"). Empty string or "/" resolves to the root
 // directory. Paths already starting with the root directory are
-// returned as-is (backward compatibility).
+// returned as-is (backward compatibility). Trailing slashes on
+// RootDirPath are handled safely.
 func (u *ui) resolveCurrentDir(currentDir string) string {
 	currentDir = strings.Trim(currentDir, "/")
 	if currentDir == "" {
-		return u.RootDirPath()
+		return u.rootDirNormalized()
 	}
 
 	rootDir := strings.Trim(u.RootDirPath(), "/")
 	if currentDir == rootDir {
-		return u.RootDirPath()
+		return u.rootDirNormalized()
 	}
 
 	// Already includes root prefix (backward compat)
@@ -112,15 +113,16 @@ func (u *ui) resolveCurrentDir(currentDir string) string {
 	}
 
 	// Root-relative path — prepend root
-	return u.RootDirPath() + "/" + currentDir
+	return u.rootDirNormalized() + "/" + currentDir
 }
 
 // stripRootPrefix removes the root directory prefix from a full storage
 // path, returning a root-relative path. e.g. "/uploads/1234" → "/1234".
 // If the path IS the root directory, returns "" (root). If the path
 // doesn't start with the root prefix, it is returned unchanged.
+// Trailing slashes on RootDirPath are handled safely.
 func (u *ui) stripRootPrefix(path string) string {
-	rootDir := u.RootDirPath()
+	rootDir := u.rootDirNormalized()
 	if path == rootDir {
 		return ""
 	}
@@ -128,6 +130,13 @@ func (u *ui) stripRootPrefix(path string) string {
 		return strings.TrimPrefix(path, rootDir)
 	}
 	return path
+}
+
+// rootDirNormalized returns RootDirPath with any trailing slashes
+// removed, so prefix checks like HasPrefix(path, rootDir+"/") work
+// correctly even if RootDirPath was configured as "/uploads/".
+func (u *ui) rootDirNormalized() string {
+	return strings.TrimRight(u.RootDirPath(), "/")
 }
 
 func (u *ui) allDirectoriesDepth(rootPath string, depth int) ([]FileEntry, error) {

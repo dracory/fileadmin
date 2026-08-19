@@ -39,7 +39,9 @@ func (u *ui) handleLoadFilesAjax(r *http.Request) string {
 
 	// Compute parent directory (root-relative for the frontend).
 	// When the parent is root, return "" so the frontend's parent link
-	// navigates to root (empty current_dir = root).
+	// navigates to root (empty current_dir = root). For non-root
+	// parents, return with a leading slash (e.g. "/parent") to match
+	// the format of current_directory and directory click paths.
 	parentDirectory := ""
 	rootRelativeCurrent := u.stripRootPrefix(fullCurrentDir)
 	if rootRelativeCurrent != "" && rootRelativeCurrent != "/" {
@@ -51,7 +53,7 @@ func (u *ui) handleLoadFilesAjax(r *http.Request) string {
 		if parent == "." || parent == "" {
 			parentDirectory = ""
 		} else {
-			parentDirectory = parent
+			parentDirectory = "/" + parent
 		}
 	}
 

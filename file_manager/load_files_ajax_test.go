@@ -203,8 +203,8 @@ func TestHandleLoadFilesAjax_DeepDirHasNonEmptyParent(t *testing.T) {
 		t.Fatalf("Failed to parse response: %v\nResponse: %s", err, result)
 	}
 
-	if resp.Data.ParentDirectory != "parent" {
-		t.Errorf("Expected parent_directory 'parent', got: %q", resp.Data.ParentDirectory)
+	if resp.Data.ParentDirectory != "/parent" {
+		t.Errorf("Expected parent_directory '/parent' (with leading slash), got: %q", resp.Data.ParentDirectory)
 	}
 	// current_directory should be root-relative (no "/uploads" prefix)
 	if resp.Data.CurrentDirectory != "/parent/child" {

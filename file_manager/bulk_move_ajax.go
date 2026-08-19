@@ -74,13 +74,10 @@ func (u *ui) bulkMoveAjax(r *http.Request) string {
 		// Extract the filename/directory name from the normalized path
 		itemName := filepath.Base(normalizedSrcPath)
 
-		// Build the new path
-		var newPath string
-		if destinationDir == "" || destinationDir == "/" {
-			newPath = "/" + itemName
-		} else {
-			newPath = strings.TrimRight(destinationDir, "/") + "/" + itemName
-		}
+		// Build the new path. destinationDir is always a full normalized
+		// storage path (e.g. "/uploads") after resolveCurrentDir +
+		// verifyAndNormalizeDirPath, so it is never empty or "/".
+		newPath := strings.TrimRight(destinationDir, "/") + "/" + itemName
 
 		// Check if trying to move a directory into itself or one of its
 		// subdirectories. Use path-boundary-aware prefix check to avoid

@@ -12,6 +12,19 @@ import (
 // getMoveDestinationsAjax returns a filtered list of directories valid for moving selected items
 func (u *ui) getMoveDestinationsAjax(r *http.Request) string {
 	rawCurrentDir := req.GetStringTrimmed(r, "current_dir")
+
+	// Validate the raw path to prevent path traversal before resolving.
+	// Without this, "../etc" resolves to "/uploads/../etc" which won't
+	// match any real directory, causing the current directory to fail
+	// exclusion from the move destinations dropdown.
+	validatePath := strings.Trim(rawCurrentDir, "/")
+	if validatePath != "" {
+		normalized, err := verifyAndNormalizeDirPath("", validatePath)
+		if err != nil {
+			return api.Error("invalid current directory: " + err.Error()).ToString()
+		}
+		rawCurrentDir = normalized
+	}
 	fullCurrentDir := u.resolveCurrentDir(rawCurrentDir)
 
 	// Parse selected items JSON

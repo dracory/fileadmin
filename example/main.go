@@ -65,8 +65,9 @@ func main() {
 	// the file manager has content to browse on first launch. Skip
 	// seeding if a file-based DB is used (persisted data should not
 	// be overwritten).
+	var stats seedStats
 	if dbFile == ":memory:" {
-		seedStorage(storage, rootDir, logger)
+		stats = seedStorage(storage, rootDir, logger)
 	}
 
 	admin, err := fileadmin.New(fileadmin.AdminOptions{
@@ -96,7 +97,7 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprintf(w, landingHTML, seedSummary(), adminURL)
+		_, _ = fmt.Fprintf(w, landingHTML, seedSummary(stats), adminURL)
 	})
 
 	logger.Info("fileadmin example server starting",
