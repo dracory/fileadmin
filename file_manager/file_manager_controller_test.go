@@ -214,3 +214,77 @@ func TestFileManagerController_GetMoveDestinationsAction(t *testing.T) {
 		t.Errorf("Handler() result = %q, want to contain %q", result, "No items selected")
 	}
 }
+
+func TestUI_FactoryReturnsUiInterface(t *testing.T) {
+	storage, db, err := testutils.InitStorage(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init storage: %v", err)
+	}
+	t.Cleanup(func() { db.Close() })
+
+	if err := storage.MakeDirectory("/uploads"); err != nil {
+		t.Fatalf("Failed to create root directory: %v", err)
+	}
+
+	config := shared.UiConfig{
+		Storage:     storage,
+		RootDirPath: "/uploads",
+		Layout: func(w http.ResponseWriter, r *http.Request, title, body string, opts struct {
+			Styles     []string
+			StyleURLs  []string
+			Scripts    []string
+			ScriptURLs []string
+		}) string {
+			return body
+		},
+	}
+
+	u := UI(config)
+	if u == nil {
+		t.Fatalf("UI() returned nil")
+	}
+
+	// Verify it implements UiInterface by calling FileManager
+	req := httptest.NewRequest(http.MethodGet, "/file-manager", nil)
+	w := httptest.NewRecorder()
+	u.FileManager(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+}
+
+func TestRenderPage_NilStorageReturnsError(t *testing.T) {
+	u := newTestUI(t)
+	u.StorageField = nil
+
+	req, err := http.NewRequest("GET", "/file-manager", nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	result := u.renderPage(req)
+
+	if !strings.Contains(result, "storage is required") {
+		t.Errorf("renderPage() with nil storage should return 'storage is required', got: %q", result)
+	}
+}
+
+func TestAnyIndex_DefaultActionRendersPage(t *testing.T) {
+	u := newTestUI(t)
+
+	req, err := http.NewRequest("GET", "/file-manager", nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	w := httptest.NewRecorder()
+	result := u.anyIndex(w, req)
+
+	if result == "" {
+		t.Errorf("Expected non-empty page render for default action")
+	}
+	if !strings.Contains(result, "container") {
+		t.Errorf("Expected rendered page to contain 'container', got: %q", result)
+	}
+}

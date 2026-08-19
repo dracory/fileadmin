@@ -201,3 +201,127 @@ func TestHandle_AuthUserIDRedirect(t *testing.T) {
 		t.Errorf("Expected redirect status 303, got %d", rr.Code)
 	}
 }
+
+func TestHandle_CustomLayoutUsedWhenProvided(t *testing.T) {
+	storage, db, err := testutils.InitStorage(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init storage: %v", err)
+	}
+	defer db.Close()
+
+	if err := storage.MakeDirectory("/uploads"); err != nil {
+		t.Fatalf("Failed to create root directory: %v", err)
+	}
+
+	layoutCalled := false
+	a, err := New(AdminOptions{
+		Storage:     storage,
+		RootDirPath: "/uploads",
+		FuncLayout: func(w http.ResponseWriter, r *http.Request, title, body string, options struct {
+			Styles     []string
+			StyleURLs  []string
+			Scripts    []string
+			ScriptURLs []string
+		}) string {
+			layoutCalled = true
+			return "<html><head><title>" + title + "</title></head><body>" + body + "</body></html>"
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/file-manager", nil)
+	rr := httptest.NewRecorder()
+
+	a.Handle(rr, req)
+
+	if !layoutCalled {
+		t.Errorf("Expected custom layout to be called")
+	}
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "<html>") {
+		t.Errorf("Expected custom layout HTML wrapper, got: %s", body)
+	}
+}
+
+func TestHandle_CustomLayoutEmptyFallsBackToDefault(t *testing.T) {
+	storage, db, err := testutils.InitStorage(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init storage: %v", err)
+	}
+	defer db.Close()
+
+	if err := storage.MakeDirectory("/uploads"); err != nil {
+		t.Fatalf("Failed to create root directory: %v", err)
+	}
+
+	a, err := New(AdminOptions{
+		Storage:     storage,
+		RootDirPath: "/uploads",
+		FuncLayout: func(w http.ResponseWriter, r *http.Request, title, body string, options struct {
+			Styles     []string
+			StyleURLs  []string
+			Scripts    []string
+			ScriptURLs []string
+		}) string {
+			return "" // Return empty to trigger fallback
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/file-manager", nil)
+	rr := httptest.NewRecorder()
+
+	a.Handle(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", rr.Code)
+	}
+
+	body := rr.Body.String()
+	// Default layout should contain the page title
+	if !strings.Contains(body, "File Manager") {
+		t.Errorf("Expected default layout fallback to contain 'File Manager', got: %s", body)
+	}
+}
+
+func TestRender_WithWriterWritesToResponse(t *testing.T) {
+	storage, db, err := testutils.InitStorage(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init storage: %v", err)
+	}
+	defer db.Close()
+
+	a, err := New(AdminOptions{
+		Storage:     storage,
+		RootDirPath: "/uploads",
+	})
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
+
+	admin := a.(*admin)
+	req := httptest.NewRequest(http.MethodGet, "/admin/file-manager", nil)
+	w := httptest.NewRecorder()
+
+	result := admin.render(w, req, "Test Title", "<p>body</p>", struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}{})
+
+	// When w is non-nil, render writes to w and returns ""
+	if result != "" {
+		t.Errorf("Expected empty string return when writer is provided, got: %q", result)
+	}
+
+	body := w.Body.String()
+	if !strings.Contains(body, "<p>body</p>") {
+		t.Errorf("Expected body to be written to response writer, got: %s", body)
+	}
+}

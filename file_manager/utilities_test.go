@@ -315,3 +315,113 @@ func TestNormalizePathSecurity_LegitimateFileWithMultipleDots(t *testing.T) {
 		t.Errorf("normalizePath(%q, %q) = %q, want %q", "", "file.name.with.dots.txt", got, "/file.name.with.dots.txt")
 	}
 }
+
+func TestHumanFilesize_Bytes(t *testing.T) {
+	u := &ui{}
+	tests := []struct {
+		size int64
+		want string
+	}{
+		{0, "0 B"},
+		{1, "1 B"},
+		{500, "500 B"},
+		{999, "999 B"},
+	}
+	for _, tt := range tests {
+		got := u.HumanFilesize(tt.size)
+		if got != tt.want {
+			t.Errorf("HumanFilesize(%d) = %q, want %q", tt.size, got, tt.want)
+		}
+	}
+}
+
+func TestHumanFilesize_Kilobytes(t *testing.T) {
+	u := &ui{}
+	tests := []struct {
+		size int64
+		want string
+	}{
+		{1000, "1.0 kB"},
+		{1500, "1.5 kB"},
+		{10000, "10.0 kB"},
+		{999999, "1000.0 kB"},
+	}
+	for _, tt := range tests {
+		got := u.HumanFilesize(tt.size)
+		if got != tt.want {
+			t.Errorf("HumanFilesize(%d) = %q, want %q", tt.size, got, tt.want)
+		}
+	}
+}
+
+func TestHumanFilesize_MegabytesAndAbove(t *testing.T) {
+	u := &ui{}
+	tests := []struct {
+		size int64
+		want string
+	}{
+		{1000 * 1000, "1.0 MB"},
+		{1000 * 1000 * 1000, "1.0 GB"},
+		{1000 * 1000 * 1000 * 1000, "1.0 TB"},
+		{1000 * 1000 * 1000 * 1000 * 1000, "1.0 PB"},
+		{1000 * 1000 * 1000 * 1000 * 1000 * 1000, "1.0 EB"},
+		{1500 * 1000 * 1000, "1.5 GB"},
+	}
+	for _, tt := range tests {
+		got := u.HumanFilesize(tt.size)
+		if got != tt.want {
+			t.Errorf("HumanFilesize(%d) = %q, want %q", tt.size, got, tt.want)
+		}
+	}
+}
+
+func TestAllDirectories_NestedStructure(t *testing.T) {
+	u := newTestUI(t)
+
+	if err := u.Storage().MakeDirectory("/uploads/dir1"); err != nil {
+		t.Fatalf("Failed to create dir1: %v", err)
+	}
+	if err := u.Storage().MakeDirectory("/uploads/dir1/sub1"); err != nil {
+		t.Fatalf("Failed to create sub1: %v", err)
+	}
+	if err := u.Storage().MakeDirectory("/uploads/dir2"); err != nil {
+		t.Fatalf("Failed to create dir2: %v", err)
+	}
+
+	result, err := u.allDirectories("/uploads")
+	if err != nil {
+		t.Fatalf("allDirectories() unexpected error: %v", err)
+	}
+
+	if len(result) != 3 {
+		t.Errorf("Expected 3 directories, got %d: %+v", len(result), result)
+	}
+
+	// Verify depth tracking
+	depths := map[string]int{}
+	for _, e := range result {
+		depths[e.Name] = e.Depth
+	}
+	if depths["dir1"] != 0 {
+		t.Errorf("Expected dir1 depth 0, got %d", depths["dir1"])
+	}
+	if depths["sub1"] != 1 {
+		t.Errorf("Expected sub1 depth 1, got %d", depths["sub1"])
+	}
+	if depths["dir2"] != 0 {
+		t.Errorf("Expected dir2 depth 0, got %d", depths["dir2"])
+	}
+}
+
+func TestAllDirectories_EmptyRoot(t *testing.T) {
+	u := newTestUI(t)
+
+	result, err := u.allDirectories("/uploads")
+	if err != nil {
+		t.Fatalf("allDirectories() unexpected error: %v", err)
+	}
+
+	if len(result) != 0 {
+		t.Errorf("Expected 0 directories for empty root, got %d", len(result))
+	}
+}
