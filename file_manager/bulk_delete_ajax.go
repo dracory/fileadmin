@@ -47,10 +47,10 @@ func (u *ui) bulkDeleteAjax(r *http.Request) string {
 			continue
 		}
 
-		// Validate path to prevent path traversal attacks.
-		// item.Path comes from user-submitted JSON and must be normalized
-		// before being passed to storage, like all other handlers.
-		normalizedPath, err := verifyAndNormalizePathOrError("", strings.TrimPrefix(item.Path, "/"))
+		// Resolve root-relative path (from frontend) to full storage
+		// path, then validate to prevent path traversal attacks.
+		fullPath := u.resolveCurrentDir(item.Path)
+		normalizedPath, err := verifyAndNormalizePathOrError("", strings.TrimPrefix(fullPath, "/"))
 		if err != nil {
 			errors = append(errors, "Invalid path: "+err.Error())
 			continue

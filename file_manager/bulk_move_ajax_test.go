@@ -130,7 +130,7 @@ func TestBulkMoveAjax_MoveToRoot(t *testing.T) {
 
 	form := url.Values{}
 	form.Add("destination_dir", "")
-	form.Add("selected_items", `[{"path":"/uploads/sub/moveme.txt","type":"file"}]`)
+	form.Add("selected_items", `[{"path":"/sub/moveme.txt","type":"file"}]`)
 
 	req, err := http.NewRequest("POST", "/file-manager", nil)
 	if err != nil {
@@ -144,9 +144,9 @@ func TestBulkMoveAjax_MoveToRoot(t *testing.T) {
 		t.Errorf("Expected success for move to root, got: %s", result)
 	}
 
-	// File should now be at /moveme.txt (root)
-	newExists, _ := u.Storage().Exists("/moveme.txt")
+	// File should now be at /uploads/moveme.txt (root directory)
+	newExists, _ := u.Storage().Exists("/uploads/moveme.txt")
 	if !newExists {
-		t.Errorf("Expected /moveme.txt to exist after move to root")
+		t.Errorf("Expected /uploads/moveme.txt to exist after move to root")
 	}
 }

@@ -90,6 +90,46 @@ func (u *ui) allDirectories(rootPath string) ([]FileEntry, error) {
 	return u.allDirectoriesDepth(rootPath, 0)
 }
 
+// resolveCurrentDir resolves a current_dir parameter (which may be
+// root-relative, e.g. "/1234" or "1234") to a full storage path
+// (e.g. "/uploads/1234"). Empty string or "/" resolves to the root
+// directory. Paths already starting with the root directory are
+// returned as-is (backward compatibility).
+func (u *ui) resolveCurrentDir(currentDir string) string {
+	currentDir = strings.Trim(currentDir, "/")
+	if currentDir == "" {
+		return u.RootDirPath()
+	}
+
+	rootDir := strings.Trim(u.RootDirPath(), "/")
+	if currentDir == rootDir {
+		return u.RootDirPath()
+	}
+
+	// Already includes root prefix (backward compat)
+	if strings.HasPrefix(currentDir, rootDir+"/") {
+		return "/" + currentDir
+	}
+
+	// Root-relative path — prepend root
+	return u.RootDirPath() + "/" + currentDir
+}
+
+// stripRootPrefix removes the root directory prefix from a full storage
+// path, returning a root-relative path. e.g. "/uploads/1234" → "/1234".
+// If the path IS the root directory, returns "" (root). If the path
+// doesn't start with the root prefix, it is returned unchanged.
+func (u *ui) stripRootPrefix(path string) string {
+	rootDir := u.RootDirPath()
+	if path == rootDir {
+		return ""
+	}
+	if strings.HasPrefix(path, rootDir+"/") {
+		return strings.TrimPrefix(path, rootDir)
+	}
+	return path
+}
+
 func (u *ui) allDirectoriesDepth(rootPath string, depth int) ([]FileEntry, error) {
 	result := []FileEntry{}
 	dirs, err := u.Storage().Directories(rootPath)

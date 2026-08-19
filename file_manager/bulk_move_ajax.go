@@ -20,8 +20,10 @@ func (u *ui) bulkMoveAjax(r *http.Request) string {
 
 	destinationDir := req.GetStringTrimmed(r, "destination_dir")
 
-	// Normalize destination directory to prevent path traversal
-	normalizedDestDir, err := verifyAndNormalizeDirPath("", strings.Trim(destinationDir, "/"))
+	// Resolve root-relative destination to full storage path, then
+	// normalize to prevent path traversal.
+	resolvedDest := u.resolveCurrentDir(destinationDir)
+	normalizedDestDir, err := verifyAndNormalizeDirPath("", strings.Trim(resolvedDest, "/"))
 	if err != nil {
 		return api.Error("invalid destination directory: " + err.Error()).ToString()
 	}
@@ -60,10 +62,10 @@ func (u *ui) bulkMoveAjax(r *http.Request) string {
 			continue
 		}
 
-		// Validate source path to prevent path traversal attacks.
-		// item.Path comes from user-submitted JSON and must be normalized
-		// before being passed to storage, like all other handlers.
-		normalizedSrcPath, err := verifyAndNormalizePathOrError("", strings.TrimPrefix(item.Path, "/"))
+		// Resolve root-relative path (from frontend) to full storage
+		// path, then validate to prevent path traversal attacks.
+		fullSrcPath := u.resolveCurrentDir(item.Path)
+		normalizedSrcPath, err := verifyAndNormalizePathOrError("", strings.TrimPrefix(fullSrcPath, "/"))
 		if err != nil {
 			errors = append(errors, "Invalid source path: "+err.Error())
 			continue

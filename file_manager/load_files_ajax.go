@@ -17,38 +17,50 @@ func (u *ui) handleLoadFilesAjax(r *http.Request) string {
 		return api.Error("storage is required").ToString()
 	}
 
-	currentDirectory := req.GetStringTrimmed(r, "current_dir")
-	currentDirectory = strings.Trim(currentDirectory, "/")
+	// Read current_dir from request. This may be root-relative (e.g.
+	// "/1234") or a full storage path (e.g. "/uploads/1234") for
+	// backward compatibility. resolveCurrentDir normalizes it.
+	rawCurrentDir := req.GetStringTrimmed(r, "current_dir")
 
-	// Validate the directory path to prevent path traversal attacks.
-	// strings.Trim only strips leading/trailing characters and does not
-	// catch embedded ".." sequences (e.g. "docs/../secret"). Use the
-	// same validator as all other handlers.
-	if currentDirectory != "" {
-		normalized, err := verifyAndNormalizeDirPath("", currentDirectory)
+	// Validate the raw path to prevent path traversal attacks before
+	// resolving. Use the root-relative portion only for validation.
+	validatePath := strings.Trim(rawCurrentDir, "/")
+	if validatePath != "" {
+		normalized, err := verifyAndNormalizeDirPath("", validatePath)
 		if err != nil {
 			return api.Error("invalid current directory: " + err.Error()).ToString()
 		}
-		currentDirectory = normalized
+		// Keep the validated, trimmed form for resolution below
+		rawCurrentDir = normalized
 	}
 
+	// Resolve to full storage path (prepend root if needed)
+	fullCurrentDir := u.resolveCurrentDir(rawCurrentDir)
+
+	// Compute parent directory (root-relative for the frontend).
+	// When the parent is root, return "" so the frontend's parent link
+	// navigates to root (empty current_dir = root).
 	parentDirectory := ""
-	if currentDirectory != "" && currentDirectory != "/" {
-		parentDirectory = filepath.Dir(currentDirectory)
+	rootRelativeCurrent := u.stripRootPrefix(fullCurrentDir)
+	if rootRelativeCurrent != "" && rootRelativeCurrent != "/" {
+		parent := filepath.Dir(rootRelativeCurrent)
+		parent = strings.ReplaceAll(parent, "\\", "/")
+		parent = strings.Trim(parent, "/")
+		// filepath.Dir("/1234") returns "/" → trimmed to "" → root.
+		// filepath.Dir("/a/b") returns "/a" → trimmed to "a".
+		if parent == "." || parent == "" {
+			parentDirectory = ""
+		} else {
+			parentDirectory = parent
+		}
 	}
 
-	parentDirectory = strings.Trim(parentDirectory, "/")
-
-	if currentDirectory == "" {
-		currentDirectory = u.RootDirPath()
-	}
-
-	directories, err := u.Storage().Directories(currentDirectory)
+	directories, err := u.Storage().Directories(fullCurrentDir)
 	if err != nil {
 		return api.Error(err.Error()).ToString()
 	}
 
-	files, err := u.Storage().Files(currentDirectory)
+	files, err := u.Storage().Files(fullCurrentDir)
 	if err != nil {
 		return api.Error(err.Error()).ToString()
 	}
@@ -60,7 +72,7 @@ func (u *ui) handleLoadFilesAjax(r *http.Request) string {
 		modified, _ := u.Storage().LastModified(dir)
 		hModified := lo.If(lo.IsEmpty(modified), "-").Else(carbon.CreateFromStdTime(modified).ToDateTimeString())
 		directoryList = append(directoryList, FileEntry{
-			Path:              dir,
+			Path:              u.stripRootPrefix(dir),
 			Name:              filepath.Base(dir),
 			Size:              size,
 			SizeHuman:         hSize,
@@ -78,7 +90,7 @@ func (u *ui) handleLoadFilesAjax(r *http.Request) string {
 		url, _ := u.Storage().Url(file)
 
 		fileList = append(fileList, FileEntry{
-			Path:              file,
+			Path:              u.stripRootPrefix(file),
 			URL:               url,
 			Name:              filepath.Base(file),
 			Size:              size,
@@ -89,8 +101,9 @@ func (u *ui) handleLoadFilesAjax(r *http.Request) string {
 	}
 
 	return api.SuccessWithData("Files loaded successfully", map[string]any{
-		"current_directory": currentDirectory,
+		"current_directory": rootRelativeCurrent,
 		"parent_directory":  parentDirectory,
+		"root_directory":    u.RootDirPath(),
 		"directories":       directoryList,
 		"files":             fileList,
 	}).ToString()

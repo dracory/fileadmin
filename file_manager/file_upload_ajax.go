@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/base/files"
@@ -21,12 +20,7 @@ func (u *ui) fileUploadAjax(r *http.Request) string {
 		return api.Error("The uploaded file is too big. Please use a file less than 50MB in size").ToString()
 	}
 
-	currentDir := req.GetStringTrimmed(r, "current_dir")
-	// When current_dir is empty (root view), default to RootDirPath so
-	// uploads land in the same directory that loadFiles lists from.
-	if strings.TrimSpace(currentDir) == "" {
-		currentDir = u.RootDirPath()
-	}
+	currentDir := u.resolveCurrentDir(req.GetStringTrimmed(r, "current_dir"))
 
 	// The argument to FormFile must match the name attribute
 	// of the file input on the frontend

@@ -2,7 +2,6 @@ package file_manager
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/req"
@@ -14,10 +13,7 @@ func (u *ui) fileDeleteAjax(r *http.Request) string {
 	if selectedFileName == "" {
 		return api.Error("delete_file is required").ToString()
 	}
-	currentDir := req.GetStringTrimmed(r, "current_dir")
-	if strings.TrimSpace(currentDir) == "" {
-		currentDir = u.RootDirPath()
-	}
+	currentDir := u.resolveCurrentDir(req.GetStringTrimmed(r, "current_dir"))
 
 	filePath, err := verifyAndNormalizePathOrError(currentDir, selectedFileName)
 	if err != nil {

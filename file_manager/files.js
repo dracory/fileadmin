@@ -20,6 +20,7 @@ const FilesApp = {
       // Current directory
       currentDirectory: '',
       parentDirectory: '',
+      rootDirectory: '',
 
       // Data
       directories: [],
@@ -65,6 +66,24 @@ const FilesApp = {
      */
     hasOpener() {
       return typeof window !== 'undefined' && window.opener !== null;
+    },
+
+    /**
+     * Returns breadcrumb segments relative to the root directory.
+     * currentDirectory is already root-relative (e.g. "/1234/sub"),
+     * so we simply split it. Each item is { name, path } where path
+     * is the root-relative path for navigation. The root directory
+     * itself is NOT included as a segment (it is represented by the
+     * "Root" home link).
+     */
+    breadcrumbParts() {
+      const parts = (this.currentDirectory || '').split('/').filter(p => p);
+      return parts.map((name, index) => {
+        return {
+          name: name,
+          path: '/' + parts.slice(0, index + 1).join('/')
+        };
+      });
     }
   },
 
@@ -100,6 +119,12 @@ const FilesApp = {
           this.directories = data.data?.directories || [];
           this.files = data.data?.files || [];
           this.parentDirectory = data.data?.parent_directory || '';
+          this.rootDirectory = data.data?.root_directory || '';
+          // Sync currentDirectory to the canonical root-relative path
+          // returned by the backend so the breadcrumb and URL stay
+          // consistent after navigation. Always sync, even when empty
+          // (root), so navigating back to root clears the path.
+          this.currentDirectory = data.data?.current_directory || '';
           this.selectedItems = [];
           this.selectAll = false;
         } else {

@@ -2,7 +2,6 @@ package file_manager
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/req"
@@ -16,12 +15,7 @@ func (u *ui) directoryCreateAjax(r *http.Request) string {
 		return api.Error("create_dir is required").ToString()
 	}
 
-	currentDir := req.GetStringTrimmed(r, "current_dir")
-	// When current_dir is empty (root view), default to RootDirPath so
-	// directories are created in the same directory that loadFiles lists.
-	if strings.TrimSpace(currentDir) == "" {
-		currentDir = u.RootDirPath()
-	}
+	currentDir := u.resolveCurrentDir(req.GetStringTrimmed(r, "current_dir"))
 
 	dirPath, err := verifyAndNormalizeDirPath(currentDir, newDirName)
 	if err != nil {

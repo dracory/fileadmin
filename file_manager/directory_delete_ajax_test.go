@@ -32,7 +32,7 @@ func TestDirectoryDeleteAjax_InvalidCurrentDir(t *testing.T) {
 
 	form := url.Values{}
 	form.Add("delete_dir", "test")
-	form.Add("current_dir", ".")
+	form.Add("current_dir", "../etc")
 
 	req, err := http.NewRequest("POST", "/file-manager", nil)
 	if err != nil {

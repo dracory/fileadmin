@@ -11,12 +11,8 @@ import (
 
 // getMoveDestinationsAjax returns a filtered list of directories valid for moving selected items
 func (u *ui) getMoveDestinationsAjax(r *http.Request) string {
-	currentDir := req.GetStringTrimmed(r, "current_dir")
-
-	// Allow empty string to represent root directory
-	if currentDir == "/" {
-		currentDir = ""
-	}
+	rawCurrentDir := req.GetStringTrimmed(r, "current_dir")
+	fullCurrentDir := u.resolveCurrentDir(rawCurrentDir)
 
 	// Parse selected items JSON
 	selectedItemsJSON := req.GetStringTrimmed(r, "selected_items")
@@ -46,16 +42,17 @@ func (u *ui) getMoveDestinationsAjax(r *http.Request) string {
 		return api.Error(err.Error()).ToString()
 	}
 
-	// Build set of paths to exclude:
+	// Build set of full storage paths to exclude:
 	// - current directory itself
-	// - any selected directory
+	// - any selected directory (resolve root-relative to full)
 	// - any subdirectory of a selected directory
 	excludePaths := map[string]bool{}
 	for _, item := range selectedItems {
 		if item.Path == "" {
 			continue
 		}
-		excludePaths[strings.TrimRight(item.Path, "/")] = true
+		fullItemPath := u.resolveCurrentDir(item.Path)
+		excludePaths[strings.TrimRight(fullItemPath, "/")] = true
 	}
 
 	filtered := []FileEntry{}
@@ -63,7 +60,7 @@ func (u *ui) getMoveDestinationsAjax(r *http.Request) string {
 		dirPath := strings.TrimRight(dir.Path, "/")
 
 		// Exclude current directory
-		if dirPath == strings.TrimRight(currentDir, "/") {
+		if dirPath == strings.TrimRight(fullCurrentDir, "/") {
 			continue
 		}
 
@@ -79,6 +76,8 @@ func (u *ui) getMoveDestinationsAjax(r *http.Request) string {
 			continue
 		}
 
+		// Return root-relative paths to the frontend
+		dir.Path = u.stripRootPrefix(dir.Path)
 		filtered = append(filtered, dir)
 	}
 

@@ -61,6 +61,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Seed the in-memory storage with sample directories and files so
+	// the file manager has content to browse on first launch. Skip
+	// seeding if a file-based DB is used (persisted data should not
+	// be overwritten).
+	if dbFile == ":memory:" {
+		seedStorage(storage, rootDir, logger)
+	}
+
 	admin, err := fileadmin.New(fileadmin.AdminOptions{
 		Storage:      storage,
 		RootDirPath:  rootDir,
@@ -88,7 +96,7 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprintf(w, landingHTML, adminURL)
+		_, _ = fmt.Fprintf(w, landingHTML, seedSummary(), adminURL)
 	})
 
 	logger.Info("fileadmin example server starting",
@@ -153,7 +161,7 @@ const landingHTML = `<!doctype html>
             <h1 class="h3 mb-3">fileadmin example</h1>
             <p class="text-muted mb-4">
               Standalone file admin panel running on an in-memory SQLite
-              database. Data is reset on every restart.
+              database. Data is reset on every restart. %s
             </p>
             <a href="%s" class="btn btn-primary">Open File Admin &rarr;</a>
           </div>
