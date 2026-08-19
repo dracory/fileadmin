@@ -1,5 +1,3 @@
-const { createApp } = Vue;
-
 /**
  * FilesApp is a Vue.js component for managing files and directories.
  * It provides a table view with navigation, upload, rename, delete,
@@ -171,6 +169,15 @@ const FilesApp = {
     handleDrop(event) {
       const files = event.dataTransfer.files;
       this.handleFiles(files);
+    },
+
+    /**
+     * Triggers the hidden multi-file input click.
+     */
+    triggerMultiFileInput() {
+      if (this.$refs.multiFileInput) {
+        this.$refs.multiFileInput.click();
+      }
     },
 
     /**
@@ -727,10 +734,14 @@ const FilesApp = {
   }
 };
 
-// Mount the app when DOM is ready
+// Mount the app when DOM is ready. Vue is loaded via the page layout's
+// ScriptURLs (after the body content), so we destructure it here inside
+// the DOMContentLoaded handler rather than at the top level. This avoids
+// loading Vue twice (which breaks refs and directives).
 document.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('files-app');
-  if (el) {
+  if (el && typeof Vue !== 'undefined') {
+    const { createApp } = Vue;
     createApp(FilesApp).mount('#files-app');
   }
 });

@@ -56,6 +56,10 @@ func webpageComplete(title, content string, options struct {
 		text-align: left;
 		background-color: #f8fafc;
 	}`)
+	// v-cloak hides elements with v-cloak attribute until Vue mounts and
+	// removes the attribute. Prevents raw template ({{ }}, v-if) from
+	// flashing before Vue is ready.
+	webpage.AddStyle(`[v-cloak]{display:none}`)
 	webpage.AddStyles(options.Styles)
 	webpage.AddChild(hb.NewHTML(content))
 	return webpage

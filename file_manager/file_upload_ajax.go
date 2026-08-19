@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/base/files"
@@ -21,6 +22,11 @@ func (u *ui) fileUploadAjax(r *http.Request) string {
 	}
 
 	currentDir := req.GetStringTrimmed(r, "current_dir")
+	// When current_dir is empty (root view), default to RootDirPath so
+	// uploads land in the same directory that loadFiles lists from.
+	if strings.TrimSpace(currentDir) == "" {
+		currentDir = u.RootDirPath()
+	}
 
 	// The argument to FormFile must match the name attribute
 	// of the file input on the frontend

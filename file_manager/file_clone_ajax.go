@@ -18,6 +18,9 @@ func (u *ui) fileCloneAjax(r *http.Request) string {
 	}
 
 	currentDir := req.GetStringTrimmed(r, "current_dir")
+	if strings.TrimSpace(currentDir) == "" {
+		currentDir = u.RootDirPath()
+	}
 
 	filePath, err := verifyAndNormalizePathOrError(currentDir, selectedFileName)
 	if err != nil {

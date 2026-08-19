@@ -1,4 +1,4 @@
-<div id="files-app">
+<div id="files-app" v-cloak>
   <div v-if="loading" class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -200,7 +200,7 @@
           </div>
           <div class="modal-body">
             <div class="border rounded p-5 text-center mb-3" style="border-style: dashed !important; cursor: pointer;"
-                 @click="$refs.multiFileInput.click()"
+                 @click="triggerMultiFileInput()"
                  @dragover.prevent
                  @drop.prevent="handleDrop($event)">
               <p class="mb-0"><i class="bi bi-cloud-upload fs-1 text-muted"></i></p>

@@ -144,8 +144,10 @@ func (u *ui) renderPage(r *http.Request) string {
 	htmlTemplate := hb.Wrap().HTML(string(htmlContent))
 	componentScript := hb.Script(string(jsContent))
 
-	// Note: Vue CDN is loaded by shared.Layout via cdn.VueJs_3(), so we
-	// don't add it here to avoid loading it twice.
+	// Vue is loaded once by shared.Layout via cdn.VueJs_3() in
+	// ScriptURLs (at the end of the page). files.js destructures Vue
+	// inside the DOMContentLoaded handler, which fires after all scripts
+	// are loaded — so Vue is available when the app mounts.
 	vueContainer := hb.Div().
 		Child(htmlTemplate).
 		Child(initScript).
