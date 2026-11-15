@@ -176,9 +176,25 @@ func dropdownItemJS(name, label string) string {
 // the input event so Vue's v-model picks it up (SendKeys would append
 // to the prefilled value instead of replacing it).
 func setVueInputJS(sel, value string) string {
+	return setVueElementJS(sel, value, "input")
+}
+
+// setVueSelectJS returns JS that sets a select's value and dispatches
+// the change event so Vue's v-model picks it up.
+func setVueSelectJS(sel, value string) string {
+	return setVueElementJS(sel, value, "change")
+}
+
+func setVueElementJS(sel, value, event string) string {
 	return `(() => { const el = document.querySelector('` + sel + `');` +
 		` el.value = '` + value + `';` +
-		` el.dispatchEvent(new Event('input', {bubbles: true})); return true })()`
+		` el.dispatchEvent(new Event('` + event + `', {bubbles: true})); return true })()`
+}
+
+// clickRowCheckboxJS returns JS that clicks the selection checkbox in
+// the row for name.
+func clickRowCheckboxJS(name string) string {
+	return rowFindJS(name, `querySelector('input[type="checkbox"]').click(); true`)
 }
 
 // TestUploadFileFlow verifies the "Upload File" modal uploads a file
@@ -340,3 +356,4 @@ func TestRenameDirectoryFlow(t *testing.T) {
 		t.Fatalf("expected renamed directory %q in file manager", newName)
 	}
 }
+

@@ -31,9 +31,10 @@ requires system libs (libnspr4 etc.) that may be missing.
 
 ## Coverage
 
-- `file-manager` — seeded rows + directory navigation + create-directory,
-  upload, delete, file-rename and directory-rename modal flows (the only
-  registered controller)
+- `file-manager` — covers all AJAX actions of the only registered
+  controller: load/navigation, create-directory, single & multi upload,
+  file/directory delete, file/directory rename, clone, view modal,
+  select-all, bulk delete-selected and bulk move-selected
 
 ## Gotchas learned
 
