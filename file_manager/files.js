@@ -759,14 +759,34 @@ const FilesApp = {
   }
 };
 
-// Mount the app when DOM is ready. Vue is loaded via the page layout's
-// ScriptURLs (after the body content), so we destructure it here inside
-// the DOMContentLoaded handler rather than at the top level. This avoids
-// loading Vue twice (which breaks refs and directives).
-document.addEventListener('DOMContentLoaded', () => {
+// Mount the app when DOM is ready. Vue is normally loaded via the page
+// layout's ScriptURLs (after the body content), so we destructure it here
+// inside the DOMContentLoaded handler rather than at the top level.
+// If the layout did not load Vue (e.g. a custom FuncLayout that ignores
+// ScriptURLs), fall back to injecting the CDN build so the app still
+// mounts. This avoids loading Vue twice (which breaks refs and
+// directives) by checking window.Vue first.
+// urlVueJs is injected by the server-side init script (from the Go cdn
+// package); the literal is a fallback if that script is missing.
+const VUE_CDN_URL = typeof urlVueJs !== 'undefined'
+  ? urlVueJs
+  : 'https://unpkg.com/vue@3/dist/vue.global.js';
+
+function mountFilesApp() {
   const el = document.getElementById('files-app');
   if (el && typeof Vue !== 'undefined') {
     const { createApp } = Vue;
     createApp(FilesApp).mount('#files-app');
   }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof Vue !== 'undefined') {
+    mountFilesApp();
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = VUE_CDN_URL;
+  script.onload = mountFilesApp;
+  document.head.appendChild(script);
 });

@@ -31,8 +31,9 @@ requires system libs (libnspr4 etc.) that may be missing.
 
 ## Coverage
 
-- `file-manager` — seeded rows + directory navigation + create-directory
-  modal flow + file delete flow (the only registered controller)
+- `file-manager` — seeded rows + directory navigation + create-directory,
+  upload, delete, file-rename and directory-rename modal flows (the only
+  registered controller)
 
 ## Gotchas learned
 
@@ -54,6 +55,12 @@ requires system libs (libnspr4 etc.) that may be missing.
 - Row action menus are real Bootstrap dropdowns — click the
   `.dropdown-toggle` (a small sleep is enough) before clicking the
   `.dropdown-item` inside the opened menu.
+- File upload works via `chromedp.SetUploadFiles` on the modal's
+  `input[type="file"]` — no real file picker needed; use `t.TempDir()`
+  for fixture files.
+- The rename input is prefilled with the old name via `v-model` —
+  `SendKeys` would append. Set `el.value` and dispatch an `input` event
+  so Vue picks up the new value (see `setVueInputJS`).
 - Modals are Vue-rendered `v-if` blocks (not Bootstrap JS modals) — they
   appear as `.modal.fade.show` once the `modal` data property is set;
   wait on `.modal .modal-title`.

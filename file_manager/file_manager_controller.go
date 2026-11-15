@@ -140,6 +140,7 @@ func (u *ui) renderPage(r *http.Request) string {
 	linksHelper := shared.NewLinksFromRequest(r)
 	initScript := hb.Script(`
 		const urlFileManager = '` + linksHelper.FileManager(nil) + `';
+		const urlVueJs = '` + cdn.VueJs_3() + `';
 	`)
 
 	htmlTemplate := hb.Wrap().HTML(string(htmlContent))
