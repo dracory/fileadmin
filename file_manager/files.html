@@ -164,8 +164,9 @@
     </div>
 
     <!-- Modal: Upload File -->
-    <div v-if="modal === 'uploadFile'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'uploadFile'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'uploadFile'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -188,10 +189,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Upload Multiple -->
-    <div v-if="modal === 'uploadMultiple'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'uploadMultiple'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'uploadMultiple'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -230,10 +233,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Create Directory -->
-    <div v-if="modal === 'createDirectory'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'createDirectory'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'createDirectory'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -261,10 +266,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Delete Directory -->
-    <div v-if="modal === 'deleteDirectory'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'deleteDirectory'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'deleteDirectory'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -288,10 +295,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Delete File -->
-    <div v-if="modal === 'deleteFile'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'deleteFile'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'deleteFile'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -315,10 +324,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Rename -->
-    <div v-if="modal === 'rename'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'rename'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'rename'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -346,10 +357,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: View File -->
-    <div v-if="modal === 'viewFile'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'viewFile'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'viewFile'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -367,10 +380,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Move Selected -->
-    <div v-if="modal === 'moveSelected'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'moveSelected'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'moveSelected'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -416,10 +431,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Delete Selected -->
-    <div v-if="modal === 'deleteSelected'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'deleteSelected'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'deleteSelected'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -452,10 +469,12 @@
         </div>
       </div>
     </div>
+    </template>
 
     <!-- Modal: Clone File -->
-    <div v-if="modal === 'cloneFile'" class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
-    <div v-if="modal === 'cloneFile'" class="modal fade show" style="display: block; z-index: 1050;">
+    <template v-if="modal === 'cloneFile'">
+    <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+    <div class="modal fade show" style="display: block; z-index: 1050;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -484,6 +503,7 @@
         </div>
       </div>
     </div>
+    </template>
 
     </div>
   </div>

@@ -9,7 +9,7 @@ import (
 )
 
 // Layout is the default layout renderer. It builds a complete HTML page
-// using hb.NewWebpage() with Bootstrap + Vue CDN, matching the
+// using hb.NewWebpage() with Bootstrap CDN, matching the
 // shopadmin/blogadmin/logadmin pattern. If a FuncLayout is provided in
 // AdminOptions, it takes precedence over this default.
 func Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
@@ -38,10 +38,13 @@ func webpageComplete(title, content string, options struct {
 		"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
 	})
 	webpage.AddStyleURLs(options.StyleURLs)
+	// Vue is intentionally NOT loaded here. Pages that need it (e.g. the
+	// file manager) pass cdn.VueJs_3() via options.ScriptURLs, so it is
+	// loaded exactly once regardless of whether a custom FuncLayout or
+	// this default layout is used.
 	webpage.AddScriptURLs([]string{
 		cdn.BootstrapJs_5_3_3(),
 		cdn.Jquery_3_7_1(),
-		cdn.VueJs_3(),
 		cdn.Sweetalert2_11(),
 	})
 	webpage.AddScriptURLs(options.ScriptURLs)
@@ -56,10 +59,9 @@ func webpageComplete(title, content string, options struct {
 		text-align: left;
 		background-color: #f8fafc;
 	}`)
-	// v-cloak hides elements with v-cloak attribute until Vue mounts and
-	// removes the attribute. Prevents raw template ({{ }}, v-if) from
-	// flashing before Vue is ready.
-	webpage.AddStyle(`[v-cloak]{display:none}`)
+	// The [v-cloak]{display:none} style is intentionally NOT set here.
+	// Vue pages pass it via options.Styles so it applies regardless of
+	// which layout renders the page.
 	webpage.AddStyles(options.Styles)
 	webpage.AddChild(hb.NewHTML(content))
 	return webpage

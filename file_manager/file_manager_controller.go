@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dracory/api"
+	"github.com/dracory/cdn"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 
@@ -144,10 +145,12 @@ func (u *ui) renderPage(r *http.Request) string {
 	htmlTemplate := hb.Wrap().HTML(string(htmlContent))
 	componentScript := hb.Script(string(jsContent))
 
-	// Vue is loaded once by shared.Layout via cdn.VueJs_3() in
-	// ScriptURLs (at the end of the page). files.js destructures Vue
-	// inside the DOMContentLoaded handler, which fires after all scripts
-	// are loaded — so Vue is available when the app mounts.
+	// Vue is passed via ScriptURLs so it is loaded once by whichever
+	// layout is used (custom FuncLayout or the default shared.Layout).
+	// files.js destructures Vue inside the DOMContentLoaded handler,
+	// which fires after all scripts are loaded — so Vue is available
+	// when the app mounts. The [v-cloak] style is passed via Styles for
+	// the same reason; it hides the raw template until Vue mounts.
 	vueContainer := hb.Div().
 		Child(htmlTemplate).
 		Child(initScript).
@@ -162,5 +165,8 @@ func (u *ui) renderPage(r *http.Request) string {
 		StyleURLs  []string
 		Scripts    []string
 		ScriptURLs []string
-	}{})
+	}{
+		Styles:     []string{"[v-cloak]{display:none}"},
+		ScriptURLs: []string{cdn.VueJs_3()},
+	})
 }
